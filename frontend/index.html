@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VerifyMe — Check Before You Forward</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F4F7F5;
+    --panel: #FFFFFF;
+    --line: #E1E8E3;
+    --ink: #1F2328;
+    --ink-dim: #5B6370;
+    --accent: #1A8754;
+    --verified: #1A8754;
+    --contradicted: #D64545;
+    --unverifiable: #C98A1E;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 44px 22px 80px; }
+
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+  .logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 27px; letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--ink-dim); font-size: 12.5px; font-family: 'IBM Plex Mono', monospace; }
+
+  .subhead { color: var(--ink-dim); font-size: 15px; line-height: 1.6; margin: 18px 0 24px; max-width: 580px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s ease;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: #9AA3AC; }
+
+  .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 6px; flex-wrap: wrap; gap: 10px; }
+
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 13px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  button.primary:hover { opacity: 0.9; }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .examples { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ex-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-dim);
+    background: transparent;
+    border: 1px solid var(--line);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .ex-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Drop zones for image / file tabs */
+  .drop-zone {
+    border: 2px dashed var(--line);
+    border-radius: 12px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--panel);
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: #F0F8F3; }
+  .drop-zone-icon { font-size: 28px; margin-bottom: 8px; }
+  .drop-zone-text { font-size: 14px; color: var(--ink-dim); }
+  .drop-zone-sub { font-size: 12px; color: #9AA3AC; margin-top: 4px; }
+  .file-preview { margin-top: 12px; font-size: 13px; color: var(--ink); font-family: 'IBM Plex Mono', monospace; display: none; }
+  .file-preview img { max-width: 100%; max-height: 220px; border-radius: 8px; margin-top: 8px; display: block; }
+
+  .status-line {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    margin: 18px 0 20px;
+    min-height: 18px;
+  }
+
+  .verdict-card {
+    display: none;
+    border-radius: 16px;
+    padding: 26px 26px 22px;
+    margin-bottom: 26px;
+    border: 2px solid var(--line);
+    background: var(--panel);
+  }
+  .verdict-headline { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 26px; margin-bottom: 8px; }
+  .verdict-summary { font-size: 14.5px; color: var(--ink-dim); line-height: 1.5; }
+  .verdict-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  .transcribed-note { font-size: 12px; color: var(--ink-dim); margin-top: 10px; font-style: italic; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 22px 0 12px;
+    display: none;
+  }
+
+  .claim-card, .url-card, .file-result-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 9px;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: rise 0.35s ease forwards;
+  }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+  .claim-text, .url-text { font-size: 14px; line-height: 1.5; color: var(--ink); margin-bottom: 7px; word-break: break-all; }
+  .claim-meta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+
+  .badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 5px;
+  }
+  .badge.verified, .badge.low { color: #136B3F; background: rgba(26,135,84,0.12); }
+  .badge.contradicted, .badge.high { color: #A8332E; background: rgba(214,69,69,0.12); }
+  .badge.unverifiable, .badge.medium { color: #93660F; background: rgba(201,138,30,0.14); }
+
+  .claim-explain { font-size: 12.5px; color: var(--ink-dim); }
+
+  .scam-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .scam-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: rgba(214,69,69,0.1);
+    color: #A8332E;
+    padding: 3px 8px;
+    border-radius: 5px;
+  }
+
+  .file-flag-list { font-size: 13px; color: var(--ink); margin: 8px 0 0; padding-left: 18px; }
+  .file-disclaimer { font-size: 11.5px; color: var(--ink-dim); margin-top: 10px; font-style: italic; }
+
+  .skeleton {
+    height: 56px; border-radius: 10px;
+    background: linear-gradient(90deg, #EDF2EE 0%, #F8FAF8 50%, #EDF2EE 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+    margin-bottom: 9px;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  .share-btn {
+    display: none;
+    margin-top: 4px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  footer {
+    margin-top: 44px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #9AA3AC;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">Verify<span>Me</span></div>
+      <div class="tagline">/// check before you forward</div>
+    </header>
+    <p class="subhead">
+      Paste a forwarded message, upload a screenshot, or check a suspicious file —
+      we'll verify claims against live web data and scan for scam patterns, phishing
+      links, and disguised files, so you get a clear answer before you act on it.
+    </p>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="text" onclick="switchTab('text')">📝 Paste Text</button>
+      <button class="tab-btn" data-tab="image" onclick="switchTab('image')">📷 Screenshot</button>
+      <button class="tab-btn" data-tab="file" onclick="switchTab('file')">📎 Check a File</button>
+      <button class="tab-btn" data-tab="url" onclick="switchTab('url')">🔗 Check a Website</button>
+    </div>
+
+    <!-- TEXT TAB -->
+    <div class="tab-panel active" id="panel-text">
+      <textarea id="messageInput" placeholder="Paste the forwarded message here..."></textarea>
+      <div class="action-row">
+        <div class="examples">
+          <button class="ex-chip" onclick="fillExample(this)">"Bank will block your account in 24 hrs, click bit.ly/verify-now"</button>
+        </div>
+      </div>
+      <div class="action-row" style="margin-top:14px;">
+        <div class="examples">
+          <button class="ex-chip" onclick="fillExample(this)">"Drinking hot lemon water every morning cures cancer, doctors confirm"</button>
+        </div>
+        <button class="primary" id="checkBtn" onclick="runTextCheck()">Check Message</button>
+      </div>
+    </div>
+
+    <!-- IMAGE TAB -->
+    <div class="tab-panel" id="panel-image">
+      <div class="drop-zone" id="imageDropZone" onclick="document.getElementById('imageInput').click()">
+        <div class="drop-zone-icon">📷</div>
+        <div class="drop-zone-text">Click to upload a screenshot, or drag one here</div>
+        <div class="drop-zone-sub">We'll read the message text out of the image automatically</div>
+      </div>
+      <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageSelect(event)" />
+      <div class="file-preview" id="imagePreview"></div>
+      <div class="action-row" style="margin-top:14px; justify-content:flex-end;">
+        <button class="primary" id="checkImageBtn" onclick="runImageCheck()" disabled>Check Screenshot</button>
+      </div>
+    </div>
+
+    <!-- FILE TAB -->
+    <div class="tab-panel" id="panel-file">
+      <div class="drop-zone" id="fileDropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-zone-icon">📎</div>
+        <div class="drop-zone-text">Click to select a file someone sent you, or drag one here</div>
+        <div class="drop-zone-sub">Checks filename/structure instantly, then runs a real scan against 70+ antivirus engines via VirusTotal</div>
+      </div>
+      <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)" />
+      <div class="file-preview" id="filePreview"></div>
+      <div class="action-row" style="margin-top:14px; justify-content:flex-end;">
+        <button class="primary" id="checkFileBtn" onclick="runFileCheck()" disabled>Check File</button>
+      </div>
+    </div>
+
+    <!-- URL TAB -->
+    <div class="tab-panel" id="panel-url">
+      <input type="text" id="urlInput" placeholder="Paste a website link here, e.g. http://suspicious-site.com"
+        style="width:100%; padding:14px 16px; border-radius:12px; border:1px solid var(--line); background:var(--panel); color:var(--ink); font-size:15px; font-family:'Inter', sans-serif; outline:none;" />
+      <div class="drop-zone-sub" style="margin-top:8px;">Checked against VirusTotal's 70+ security engines, plus pattern analysis for lookalike domains and phishing tricks</div>
+      <div class="action-row" style="margin-top:14px; justify-content:flex-end;">
+        <button class="primary" id="checkUrlBtn" onclick="runUrlCheck()">Check Website</button>
+      </div>
+    </div>
+
+    <div class="status-line" id="status"></div>
+
+    <div class="verdict-card" id="verdictCard">
+      <div class="verdict-tag" id="verdictTag"></div>
+      <div class="verdict-headline" id="verdictHeadline"></div>
+      <div class="verdict-summary" id="verdictSummary"></div>
+      <div class="scam-tags" id="scamTags"></div>
+      <div class="transcribed-note" id="transcribedNote" style="display:none;"></div>
+      <button class="share-btn" id="shareBtn" onclick="copyVerdict()">📋 Copy verdict to share</button>
+    </div>
+
+    <div class="section-label" id="claimsLabel">Claim-by-claim check (live web verification)</div>
+    <div id="claimsContainer"></div>
+
+    <div class="section-label" id="urlsLabel">Link risk check</div>
+    <div id="urlsContainer"></div>
+
+    <div id="fileResultContainer"></div>
+    <div id="urlResultContainer"></div>
+
+    <footer>VerifyMe — built for Google Build with AI (Bangalore) · Agent Arena 2026 · backend: Gemini + Search grounding on Cloud Run</footer>
+  </div>
+
+<script>
+  const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:8080"
+    : "https://YOUR-CLOUD-RUN-URL.run.app";
+
+  let lastVerdictText = "";
+  let selectedImageFile = null;
+  let selectedGenericFile = null;
+
+  // ---------- Tabs ----------
+  function switchTab(tab) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.getElementById("panel-" + tab).classList.add("active");
+    resetResults();
+  }
+
+  function resetResults() {
+    document.getElementById("status").textContent = "";
+    document.getElementById("verdictCard").style.display = "none";
+    document.getElementById("claimsLabel").style.display = "none";
+    document.getElementById("urlsLabel").style.display = "none";
+    document.getElementById("claimsContainer").innerHTML = "";
+    document.getElementById("urlsContainer").innerHTML = "";
+    document.getElementById("fileResultContainer").innerHTML = "";
+    document.getElementById("urlResultContainer").innerHTML = "";
+    document.getElementById("shareBtn").style.display = "none";
+    document.getElementById("transcribedNote").style.display = "none";
+  }
+
+  function fillExample(el) {
+    document.getElementById("messageInput").value = el.textContent.replace(/^"|"$/g, "");
+  }
+
+  function badgeClass(v) {
+    if (v === "verified" || v === "low") return v === "low" ? "low" : "verified";
+    if (v === "contradicted" || v === "high") return v === "high" ? "high" : "contradicted";
+    return v === "medium" ? "medium" : "unverifiable";
+  }
+
+  function tagStyle(color) {
+    if (color === "verified") return { bg: "rgba(26,135,84,0.12)", fg: "#136B3F" };
+    if (color === "contradicted") return { bg: "rgba(214,69,69,0.12)", fg: "#A8332E" };
+    return { bg: "rgba(201,138,30,0.14)", fg: "#93660F" };
+  }
+
+  function renderVerdict(v) {
+    const style = tagStyle(v.color);
+    document.getElementById("verdictTag").textContent = v.color.toUpperCase();
+    document.getElementById("verdictTag").style.background = style.bg;
+    document.getElementById("verdictTag").style.color = style.fg;
+    document.getElementById("verdictHeadline").textContent = v.headline;
+    document.getElementById("verdictHeadline").style.color = style.fg;
+    document.getElementById("verdictSummary").textContent = v.summary;
+    document.getElementById("verdictCard").style.display = "block";
+    document.getElementById("verdictCard").style.borderColor = style.fg;
+    lastVerdictText = `VerifyMe check: "${v.headline}" — ${v.summary}`;
+    document.getElementById("shareBtn").style.display = "inline-block";
+  }
+
+  function renderScamTags(scamCheck) {
+    const el = document.getElementById("scamTags");
+    el.innerHTML = "";
+    if (scamCheck && scamCheck.patterns_found && scamCheck.patterns_found.length) {
+      scamCheck.patterns_found.forEach(p => {
+        const tag = document.createElement("span");
+        tag.className = "scam-tag";
+        tag.textContent = "⚠ " + p;
+        el.appendChild(tag);
+      });
+    }
+  }
+
+  function renderClaims(claims) {
+    const claimsLabel = document.getElementById("claimsLabel");
+    const container = document.getElementById("claimsContainer");
+    container.innerHTML = "";
+    if (claims && claims.length) {
+      claimsLabel.style.display = "block";
+      claims.forEach((c, idx) => {
+        const card = document.createElement("div");
+        card.className = "claim-card";
+        card.style.animationDelay = (idx * 0.08) + "s";
+        card.innerHTML = `
+          <div class="claim-text">${c.claim}</div>
+          <div class="claim-meta">
+            <span class="badge ${badgeClass(c.verdict)}">${c.verdict}</span>
+            <span class="claim-explain">${c.explanation || ""}</span>
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+  }
+
+  function renderUrlChecks(urlCheck) {
+    const urlsLabel = document.getElementById("urlsLabel");
+    const container = document.getElementById("urlsContainer");
+    container.innerHTML = "";
+    if (urlCheck && urlCheck.urls_found && urlCheck.urls_found.length) {
+      urlsLabel.style.display = "block";
+      urlCheck.urls_found.forEach((u, idx) => {
+        const card = document.createElement("div");
+        card.className = "url-card";
+        card.style.animationDelay = (idx * 0.08) + "s";
+        card.innerHTML = `
+          <div class="url-text">${u.url}</div>
+          <div class="claim-meta">
+            <span class="badge ${badgeClass(u.risk)}">${u.risk} risk</span>
+            <span class="claim-explain">${u.reason || ""}</span>
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+  }
+
+  // ---------- TEXT CHECK ----------
+  async function runTextCheck() {
+    const message = document.getElementById("messageInput").value.trim();
+    if (!message) return;
+
+    const btn = document.getElementById("checkBtn");
+    resetResults();
+    btn.disabled = true;
+    document.getElementById("status").textContent = "extracting claims...";
+    showSkeletons();
+
+    try {
+      const res = await fetch(`${API_BASE}/api/check`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      const data = await res.json();
+      handleCheckResponse(data);
+    } catch (err) {
+      document.getElementById("status").textContent = "error: could not reach VerifyMe backend. Is it running?";
+      document.getElementById("claimsContainer").innerHTML = "";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ---------- IMAGE CHECK ----------
+  function handleImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    selectedImageFile = file;
+    const preview = document.getElementById("imagePreview");
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.style.display = "block";
+      preview.innerHTML = `Selected: ${file.name}<img src="${e.target.result}" />`;
+    };
+    reader.readAsDataURL(file);
+    document.getElementById("checkImageBtn").disabled = false;
+  }
+
+  async function runImageCheck() {
+    if (!selectedImageFile) return;
+    const btn = document.getElementById("checkImageBtn");
+    resetResults();
+    btn.disabled = true;
+    document.getElementById("status").textContent = "reading text from screenshot...";
+    showSkeletons();
+
+    const formData = new FormData();
+    formData.append("image", selectedImageFile);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/check-image`, { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.message) {
+        document.getElementById("transcribedNote").style.display = "block";
+        document.getElementById("transcribedNote").textContent = `Transcribed from image: "${data.message}"`;
+      }
+      handleCheckResponse(data);
+    } catch (err) {
+      document.getElementById("status").textContent = "error: could not reach VerifyMe backend. Is it running?";
+      document.getElementById("claimsContainer").innerHTML = "";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ---------- FILE CHECK ----------
+  function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    selectedGenericFile = file;
+    const preview = document.getElementById("filePreview");
+    preview.style.display = "block";
+    preview.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    document.getElementById("checkFileBtn").disabled = false;
+  }
+
+  async function runFileCheck() {
+    if (!selectedGenericFile) return;
+    const btn = document.getElementById("checkFileBtn");
+    resetResults();
+    btn.disabled = true;
+    document.getElementById("status").textContent = "checking filename, then scanning with VirusTotal (this can take up to ~20s)...";
+
+    const formData = new FormData();
+    formData.append("file", selectedGenericFile);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/check-file`, { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (data.error) {
+        document.getElementById("status").textContent = "error: " + data.error;
+        return;
+      }
+
+      const h = data.heuristic_check;
+      const vt = data.malware_scan;
+      const style = tagStyle(data.overall_risk === "high" ? "contradicted" : data.overall_risk === "medium" ? "unverifiable" : "verified");
+
+      let vtBlock = "";
+      if (vt.scanned) {
+        const vtBadgeClass = vt.verdict === "malicious" ? "contradicted" : vt.verdict === "suspicious" ? "unverifiable" : "verified";
+        const vtBadgeLabel = vt.verdict; // show VT's own word (malicious/suspicious/clean) as the text
+        vtBlock = `
+          <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
+            <div class="claim-meta" style="margin-bottom:6px;">
+              <span class="badge ${vtBadgeClass}">${vtBadgeLabel}</span>
+              <span class="claim-explain">${vt.summary}${vt.from_cache ? " (matched a previously known file)" : " (freshly scanned)"}</span>
+            </div>
+            <div class="file-disclaimer" style="font-family:'IBM Plex Mono', monospace;">SHA-256: ${vt.sha256}</div>
+          </div>`;
+      } else {
+        vtBlock = `
+          <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
+            <div class="claim-explain">⚠ Real malware scan unavailable: ${vt.reason}</div>
+          </div>`;
+      }
+
+      const container = document.getElementById("fileResultContainer");
+      container.innerHTML = `
+        <div class="claim-card" style="border-color:${style.fg}">
+          <div class="claim-meta" style="margin-bottom:8px;">
+            <span class="badge ${badgeClass(data.overall_risk)}">${data.overall_risk} risk</span>
+            <span class="claim-text" style="margin:0;">${data.filename}</span>
+          </div>
+          <div class="section-label" style="display:block; margin:10px 0 6px;">Filename / structure check</div>
+          <ul class="file-flag-list">${h.flags.map(f => `<li>${f}</li>`).join("")}</ul>
+          <div class="section-label" style="display:block; margin:10px 0 6px;">Real malware scan (VirusTotal — 70+ antivirus engines)</div>
+          ${vtBlock}
+          <div class="file-disclaimer" style="margin-top:10px;">${h.disclaimer}</div>
+        </div>`;
+
+      document.getElementById("status").textContent = "done — filename checked + VirusTotal scan complete";
+    } catch (err) {
+      document.getElementById("status").textContent = "error: could not reach VerifyMe backend. Is it running?";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ---------- URL / WEBSITE CHECK ----------
+  async function runUrlCheck() {
+    const urlInput = document.getElementById("urlInput");
+    const url = urlInput.value.trim();
+    if (!url) return;
+
+    const btn = document.getElementById("checkUrlBtn");
+    resetResults();
+    btn.disabled = true;
+    document.getElementById("status").textContent = "checking against VirusTotal (70+ engines) + analyzing structure...";
+
+    try {
+      const res = await fetch(`${API_BASE}/api/check-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        document.getElementById("status").textContent = "error: " + data.error;
+        return;
+      }
+
+      const ti = data.threat_intel;
+      const pc = data.pattern_check;
+      const style = tagStyle(data.overall_risk === "high" ? "contradicted" : data.overall_risk === "medium" ? "unverifiable" : "verified");
+
+      let tiBlock = "";
+      if (ti.checked) {
+        const tiBadgeClass = ti.is_flagged ? "contradicted" : "verified";
+        tiBlock = `
+          <div class="claim-meta" style="margin-bottom:6px;">
+            <span class="badge ${tiBadgeClass}">${ti.is_flagged ? "flagged" : "not flagged"}</span>
+            <span class="claim-explain">${ti.summary}${ti.from_cache ? " (previously analyzed)" : " (freshly scanned)"}</span>
+          </div>`;
+      } else {
+        tiBlock = `<div class="claim-explain">⚠ Real threat-intelligence check unavailable: ${ti.reason}</div>`;
+      }
+
+      const flagsList = (pc.red_flags || []).length
+        ? `<ul class="file-flag-list">${pc.red_flags.map(f => `<li>${f}</li>`).join("")}</ul>`
+        : `<div class="claim-explain">No structural red flags detected.</div>`;
+
+      const container = document.getElementById("urlResultContainer");
+      container.innerHTML = `
+        <div class="claim-card" style="border-color:${style.fg}">
+          <div class="claim-meta" style="margin-bottom:8px;">
+            <span class="badge ${badgeClass(data.overall_risk)}">${data.overall_risk} risk</span>
+            <span class="claim-text" style="margin:0; word-break:break-all;">${data.url}</span>
+          </div>
+          <div class="section-label" style="display:block; margin:10px 0 6px;">VirusTotal (70+ security engines)</div>
+          ${tiBlock}
+          <div class="section-label" style="display:block; margin:10px 0 6px;">Structural pattern check</div>
+          ${flagsList}
+          <div class="claim-explain" style="margin-top:6px;">${pc.explanation || ""}</div>
+          <div class="file-disclaimer" style="margin-top:10px;">VirusTotal aggregates many security engines and blocklists — a brand-new scam site may not be flagged yet even if it's risky. Always be cautious with unfamiliar links.</div>
+        </div>`;
+
+      document.getElementById("status").textContent = "done — checked against VirusTotal + structural analysis";
+    } catch (err) {
+      document.getElementById("status").textContent = "error: could not reach VerifyMe backend. Is it running?";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ---------- Shared response handler for text + image checks ----------
+  function handleCheckResponse(data) {
+    if (data.error) {
+      document.getElementById("status").textContent = "error: " + data.error;
+      document.getElementById("claimsContainer").innerHTML = "";
+      return;
+    }
+    document.getElementById("status").textContent = "verifying live against the web + scanning for scam patterns...";
+    renderVerdict(data.verdict);
+    renderScamTags(data.scam_check);
+    renderClaims(data.claims);
+    renderUrlChecks(data.url_check);
+    document.getElementById("status").textContent = "done — checked against live web data";
+  }
+
+  function showSkeletons() {
+    const container = document.getElementById("claimsContainer");
+    container.innerHTML = "";
+    for (let i = 0; i < 2; i++) {
+      const sk = document.createElement("div");
+      sk.className = "skeleton";
+      container.appendChild(sk);
+    }
+  }
+
+  function copyVerdict() {
+    navigator.clipboard.writeText(lastVerdictText).then(() => {
+      const btn = document.getElementById("shareBtn");
+      const original = btn.textContent;
+      btn.textContent = "✓ Copied!";
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    });
+  }
+
+  document.getElementById("messageInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.ctrlKey) runTextCheck();
+  });
+
+  // Drag & drop support
+  ["imageDropZone", "fileDropZone"].forEach(id => {
+    const zone = document.getElementById(id);
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("dragover"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("dragover");
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      if (id === "imageDropZone") {
+        document.getElementById("imageInput").files = e.dataTransfer.files;
+        handleImageSelect({ target: { files: [file] } });
+      } else {
+        document.getElementById("fileInput").files = e.dataTransfer.files;
+        handleFileSelect({ target: { files: [file] } });
+      }
+    });
+  });
+</script>
+</body>
+</html>
