@@ -1,6 +1,6 @@
 # VerifyMe — Check Before You Forward
 
-Built for **Google Build with AI (Bangalore) — Vibe Coding Hackathon**, Jun 26 2026.
+Built for  Hackathon**, Jun  2026.
 
 Paste a forwarded message, upload a screenshot, or check a suspicious file.
 VerifyMe extracts factual claims, checks each one against live web data,
@@ -206,22 +206,3 @@ and replace it with your real Cloud Run URL. Save the file — now your frontend
 
 ---
 
-## 🛠️ Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| `ModuleNotFoundError` when running `python app.py` | You forgot to activate the venv, or forgot `pip install -r requirements.txt` |
-| Backend says `GEMINI_API_KEY not set` | Your `.env` file is missing, misnamed, or the key wasn't pasted correctly |
-| Frontend shows "could not reach VerifyMe backend" | Make sure Step 3's terminal is still running, and that you're loading the frontend via `http://localhost:5500` (a real server), not by double-clicking the file (`file://`) |
-| Screenshot tab gives an error | Make sure the image is a common format (JPG/PNG) and under ~8MB |
-| `curl` command fails on Windows | Use Windows PowerShell instead of cmd, or just test directly from the browser UI instead |
-| File scan says "VIRUSTOTAL_API_KEY not configured" | Add a free VirusTotal key to `.env` — see Step 2.5 above. The rest of the app still works without it. |
-| File scan takes ~20 seconds and then says "still in progress" | Normal for files VirusTotal hasn't seen before — it's running a real scan, not stalling. Try again shortly, or check the printed SHA-256 hash directly on virustotal.com |
-| Screenshot check fails with `503 UNAVAILABLE` | This is Google's Gemini servers being temporarily overloaded, not a bug in your setup. The backend now auto-retries 3 times with a short delay — if it still fails, just wait ~20 seconds and try again. |
-| Website check says "real threat-intelligence check unavailable" | Add a free VirusTotal key to `.env` — see the setup step above. The structural pattern check still works without it. |
-
-## Notes / things to tweak under time pressure
-
-- `MODEL` in `app.py` is `gemini-2.5-flash` for speed. Switch to `gemini-2.5-pro` if you want deeper reasoning and have time budget.
-- Claims are capped at 6 per message to keep the demo fast and avoid burning quota.
-- If a message has no factual claims (e.g. pure phishing link), the claim list will be empty — that's expected, the scam-pattern check still runs and catches it.
