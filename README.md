@@ -185,7 +185,7 @@ and replace it with your real Cloud Run URL. Save the file — now your frontend
 
 ---
 
-## 🎤 Demo script (for judges)
+## 🎤 Demo script 
 
 **Text tab:**
 1. Paste a real or realistic scam/misinformation forward — a health claim, a bank warning with a link, a job offer.
