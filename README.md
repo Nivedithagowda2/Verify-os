@@ -156,34 +156,8 @@ the same way.
 
 ---
 
-## ☁️ Step 5 — Deploy to Cloud Run (for the mandatory live URL)
 
-You'll need the `gcloud` CLI installed (https://cloud.google.com/sdk/docs/install).
 
-From inside the `backend/` folder:
-
-```bash
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-
-gcloud run deploy verifyme --source . --region asia-south1 --allow-unauthenticated --set-env-vars GEMINI_API_KEY=paste_your_real_key_here
-```
-
-This builds your `Dockerfile` automatically and gives you a public URL like:
-
-```
-https://verifyme-xxxxx-uc.a.run.app
-```
-
-Then open `frontend/index.html`, find this line near the bottom of the `<script>` section:
-
-```js
-: "https://YOUR-CLOUD-RUN-URL.run.app";
-```
-
-and replace it with your real Cloud Run URL. Save the file — now your frontend talks to the live, deployed backend instead of localhost.
-
----
 
 ## 🎤 Demo script 
 
