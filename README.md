@@ -1,16 +1,101 @@
-# VerifyMe — Check Before You Forward
+VerifyMe — Check Before You Forward
 
-Built for  Hackathon**, Jun  2026.
 
-Paste a forwarded message, upload a screenshot, or check a suspicious file.
-VerifyMe extracts factual claims, checks each one against live web data,
-scans for scam patterns and phishing links, flags disguised files, and gives
-you one clear, shareable verdict.
+An AI-powered verification layer for India's biggest misinformation and scam channel — WhatsApp forwards.
 
-**Three ways to check something:**
-1. 📝 Paste a forwarded message directly
-2. 📷 Upload a screenshot — Gemini Vision reads the text out of the image
-3. 📎 Check a suspicious file's name/structure for malware-disguise tricks
+
+
+
+The Problem
+
+Every day, millions of people in India receive forwarded WhatsApp messages they aren't sure about — a health scare, a "your bank account will be blocked" warning, a too-good-to-be-true investment offer, a fake job opportunity. Most people either believe it and act on it, or ignore it and hope for the best. There's no fast, easy way to actually check.
+
+The scale of the harm is real and growing:
+
+
+₹22,495 crore lost to cybercrime in India in 2025 — up 24% from 2024
+28.15 lakh cybercrime complaints registered in 2025 alone
+51% of fraud victims never even report what happened
+60%+ of Indian internet users have encountered fake news on WhatsApp
+
+
+The structural reason this is hard to fix: WhatsApp is end-to-end encrypted, so no platform — not even WhatsApp itself — can moderate forwarded content at scale. The only realistic fix is to give people a fast, independent way to verify a message themselves, the moment they receive it.
+
+
+The Solution
+
+VerifyMe lets anyone check a suspicious forward in seconds — paste the text, upload a screenshot, drop a file, or paste a link. It runs the content through a multi-agent AI verification pipeline and returns one clear, shareable verdict: Likely True, Likely False, or Scam Pattern Detected — simple enough to forward straight back into the family group.
+
+
+How It Works
+
+VerifyMe runs four independent verification agents on every submission:
+
+Agent 1 — Claim Extractor
+Gemini reads the message and pulls out every specific, checkable factual claim — not opinions or vague statements, but concrete things that can be verified (e.g. "hot lemon water cures cancer", "your account will be suspended in 24 hours").
+
+Agent 2 — Live Verifier
+Each extracted claim is independently checked against live web sources using Google Search grounding — not the model's own memory, which can be outdated or wrong. This is what separates VerifyMe from just asking an LLM "is this true?".
+
+Agent 3 — Scam Pattern Matcher
+Separately scans the raw message for manipulation patterns that signal a scam even when there's no specific factual claim to check: artificial urgency, OTP/PIN requests, fake deadlines, processing fee demands, phishing link structures, impersonation of official institutions.
+
+Agent 4 — Threat-Intel Scan (for files and links)
+For uploaded files and submitted URLs, runs a real malware and phishing scan across 70+ security engines via the VirusTotal API — actual detection, not a guess. For files, it also checks filename/extension disguise tricks (e.g. a .pdf.exe hiding as a document).
+
+Everything is combined into a single verdict card with a plain-language explanation you can copy and share.
+
+
+Features
+
+
+📝 Paste Text — paste any forwarded message and check it instantly
+📷 Upload a Screenshot — Gemini Vision reads the message text out of the image automatically, so you don't have to retype anything
+📎 Check a File — filename/structure heuristics + real VirusTotal scan across 70+ antivirus engines
+🔗 Check a Website — URL pattern analysis + VirusTotal threat-intelligence lookup for links you're unsure about
+📋 Copy verdict to share — one-tap copy of the verdict to paste back into a chat
+
+
+
+Tech Stack
+
+LayerTechnologyFrontendHTML / CSS / JavaScript (single-page, no framework, no install)BackendPython (Flask), DockerizedDeploymentGoogle Cloud RunAIGemini 2.5 Flash with Google Search groundingScreenshot OCRGemini Vision (multimodal)Malware/URL scanningVirusTotal API (70+ engines)
+
+
+Architecture
+
+User input (text / screenshot / file / URL)
+        │
+        ▼
+┌─────────────────────┐
+│  Agent 1            │  Gemini extracts checkable factual claims
+│  Claim Extractor    │
+└──────────┬──────────┘
+           │
+        ▼
+┌─────────────────────┐
+│  Agent 2            │  Each claim verified against live web via
+│  Live Verifier      │  Google Search grounding (not model memory)
+└──────────┬──────────┘
+           │
+        ▼
+┌─────────────────────┐
+│  Agent 3            │  Message scanned for urgency, OTP requests,
+│  Scam Pattern       │  fake deadlines, phishing structure
+│  Matcher            │
+└──────────┬──────────┘
+           │
+        ▼
+┌─────────────────────┐
+│  Agent 4            │  Files and URLs checked against
+│  Threat-Intel Scan  │  70+ security engines via VirusTotal
+└──────────┬──────────┘
+           │
+        ▼
+┌─────────────────────┐
+│  Verdict            │  Likely True / Likely False /
+│  Synthesizer        │  Scam Pattern Detected
+└─────────────────────┘
 
 ---
 
