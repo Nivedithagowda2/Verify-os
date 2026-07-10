@@ -93,6 +93,8 @@ For uploaded files and submitted URLs, this agent initiates a live scan across 7
                        │   Synthesizer         │  Scam Pattern Detected
                        └───────────────────────┘
 
+
+
 ## 📁 File structure
 
 ```
