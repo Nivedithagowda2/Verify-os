@@ -120,17 +120,78 @@ For uploaded files and submitted URLs, this agent initiates a live scan across 7
 
 ---
 
-## 📁 Project Structure
+## 🔑 Environment Variables
 
-```text
-verifyme/
-├── backend/
-│   ├── app.py              ← All 4 agents live here
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── .env.example        ← Copy to .env and add your keys
-└── frontend/
-    └── index.html          ← Complete single-file UI
+| Variable | Required | Description |
+| :--- | :---: | :--- |
+| `GEMINI_API_KEY` | ✅ Yes | Powers all AI agents. Free at AI Studio. |
+| `VIRUSTOTAL_API_KEY` | Optional | Real malware and URL scanning. Free tier allows 500 req/day. |
+
+---
+
+## 🚀 Getting Started
+
+### 1. Get your API keys
+* **Gemini API key (Required)** — Get it free at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+* **VirusTotal API key (Optional)** — Get it free at [virustotal.com/gui/my-apikey](https://virustotal.com/gui/my-apikey)
+
+### 2. Run the backend
+Open your terminal and run the following commands:
+
+```bash
+cd backend
+python -m venv venv
+
+# Activate virtual environment
+# On Mac/Linux:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment keys
+cp .env.example .env  # Open .env and paste your actual keys inside
+
+# Run the server
+python app.py
+
+The backend server will run natively at http://localhost:8080
 
 ```
 
+### 3. Run the frontend
+Open a second, separate terminal window and serve the interface:
+
+```bash
+cd frontend
+python -m http.server 5500
+
+Open http://localhost:5500 in your preferred web browser.
+
+```
+
+## ☁️ Deploy to Cloud Run
+
+To package your containerized backend application and host it in production, utilize this deployment command setup:
+
+```bash
+cd backend
+gcloud run deploy verifyme \
+  --source . \
+  --region asia-south1 \
+  --allow-unauthenticated \
+  --set-env-vars GEMINI_API_KEY=your_key,VIRUSTOTAL_API_KEY=your_key
+```
+
+## 🌐 Live Demo
+
+You can interact with the live deployment configuration here:  
+👉 **[https://verifyme-912849302401.asia-south1.run.app](https://verifyme-912849302401.asia-south1.run.app)**
+
+---
+
+## 📄 License
+
+This project is licensed under the terms of the **MIT License**.
