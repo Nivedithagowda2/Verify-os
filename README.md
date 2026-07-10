@@ -1,4 +1,4 @@
-VerifyMe — Check Before You Forward
+#VerifyMe — Check Before You Forward
 
 
 An AI-powered verification layer for India's biggest misinformation and scam channel — WhatsApp forwards.
@@ -6,7 +6,7 @@ An AI-powered verification layer for India's biggest misinformation and scam cha
 
 
 
-The Problem
+#The Problem
 
 Every day, millions of people in India receive forwarded WhatsApp messages they aren't sure about — a health scare, a "your bank account will be blocked" warning, a too-good-to-be-true investment offer, a fake job opportunity. Most people either believe it and act on it, or ignore it and hope for the best. There's no fast, easy way to actually check.
 
