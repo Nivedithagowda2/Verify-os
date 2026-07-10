@@ -92,6 +92,7 @@ For uploaded files and submitted URLs, this agent initiates a live scan across 7
                        │   Verdict             │  Likely True / Likely False /
                        │   Synthesizer         │  Scam Pattern Detected
                        └───────────────────────┘
+```
 
 
 
@@ -131,4 +132,5 @@ verifyme/
 └── frontend/
     └── index.html          ← Complete single-file UI
 
+```
 
