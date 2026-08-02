@@ -32,6 +32,8 @@ The content is passed through a multi-agent AI verification pipeline that return
 | 🔴 **Likely False** | One or more claims explicitly contradicted by live web sources. |
 | 🟡 **Scam Pattern Detected** | Core indicators of fraud, manipulation, or phishing tactics identified. |
 
+
+
 ---
 
 ## 🔍 How It Works — 4-Agent Pipeline
