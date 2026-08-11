@@ -34,7 +34,7 @@ The content is passed through a multi-agent AI verification pipeline that return
 
 ---
 
-## 🔍 How It Works — 4-Agent Pipeline
+## 🔍 How It Works — 4-Agent Pipeline    
 
 VerifyMe runs four independent verification agents on every submission to ensure multi-layered analysis:
 
