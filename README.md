@@ -18,7 +18,7 @@ The impact of this unchecked ecosystem is real, dangerous, and growing rapidly:
 ### 🔒 The Structural Challenge
 WhatsApp is end-to-end encrypted, meaning no platform — not even WhatsApp itself — can moderate forwarded content at scale. The only realistic fix is to give users a fast, independent way to verify a message themselves, the moment they receive it.
 
----
+----
 
 ## ✅ The Solution
 
