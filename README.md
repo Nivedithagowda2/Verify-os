@@ -1,3 +1,4 @@
+
 # VerifyMe — Check Before You Forward
 
 An AI-powered verification layer for India's biggest misinformation and scam channel — WhatsApp forwards. 
